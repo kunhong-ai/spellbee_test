@@ -41,6 +41,7 @@
     function chooseRandomWord() {
       if (words.length === 0) return;
       currentWord = words[Math.floor(Math.random() * words.length)];
+      return currentWord.includes('/') ? currentWord.split('/')[1] : currentWord;
     }
 
     // Speak the chosen word
@@ -49,11 +50,26 @@
 
       const utterance = new SpeechSynthesisUtterance(currentWord);
       speechSynthesis.speak(utterance);
+
+      // Enable the "Print Random Word" button after speaking
+      printWordBtn.disabled = false;
     }
 
-    // Print the chosen word and choose a new one
+    // Print the chosen word and speak its spelling
     function printWord() {
-      wordDisplay.textContent = `Word: ${currentWord || 'No word chosen yet'}`;
+      if (!currentWord) return;
+
+      // Display the word on the page
+      wordDisplay.textContent = `Word: ${currentWord}`;
+
+      // Speak the spelling (character by character)
+      for (const char of currentWord) {
+        const utterance = new SpeechSynthesisUtterance(char);
+        speechSynthesis.speak(utterance);
+      }
+
+      // Disable the "Print Random Word" button until a new word is chosen
+      printWordBtn.disabled = true;
       chooseRandomWord(); // Choose a new word for the next interaction
     }
 
