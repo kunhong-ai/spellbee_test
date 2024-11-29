@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabulary Pronouncer</title>
+</head>
+<body>
+  <h1>Random Vocabulary Pronouncer</h1>
+  <input type="file" id="fileInput" accept="application/pdf" />
+  <button id="randomWordBtn" disabled>Choose Random Word</button>
+  <p id="wordDisplay"></p>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const randomWordBtn = document.getElementById('randomWordBtn');
+    const wordDisplay = document.getElementById('wordDisplay');
+    let words = [];
+
+    // Read and parse PDF
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const fileReader = new FileReader();
+        fileReader.onload = async function () {
+          const pdfData = new Uint8Array(this.result);
+          const pdf = await pdfjsLib.getDocument(pdfData).promise;
+          let text = '';
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map((item) => item.str).join(' ');
+          }
+          
+          words = text.split(/\s+/).filter((word) => word.length > 0);
+          randomWordBtn.disabled = false;
+          alert('PDF loaded! Ready to choose a word.');
+        };
+        fileReader.readAsArrayBuffer(file);
+      }
+    });
+
+    // Randomly choose and pronounce a word
+    randomWordBtn.addEventListener('click', () => {
+      if (words.length === 0) return;
+      const randomWord = words[Math.floor(Math.random() * words.length)];
+      wordDisplay.textContent = `Word: ${randomWord}`;
+
+      // Pronounce the word
+      const utterance = new SpeechSynthesisUtterance(randomWord);
+      speechSynthesis.speak(utterance);
+    });
+  </script>
+</body>
+</html>
+
