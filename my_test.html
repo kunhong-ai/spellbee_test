@@ -3,54 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vocabulary Pronouncer</title>
+  <title>Rainbow Spell Bee Challenge</title>
 </head>
 <body>
   <h1>Random Vocabulary Pronouncer</h1>
-  <input type="file" id="fileInput" accept="application/pdf" />
-  <button id="randomWordBtn" disabled>Choose Random Word</button>
+  <button id="speakWordBtn" disabled>Speak Random Word</button>
+  <button id="printWordBtn" disabled>Print Spelling</button>
   <p id="wordDisplay"></p>
-  
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const randomWordBtn = document.getElementById('randomWordBtn');
+    const speakWordBtn = document.getElementById('speakWordBtn');
+    const printWordBtn = document.getElementById('printWordBtn');
     const wordDisplay = document.getElementById('wordDisplay');
+    const pdfUrl = 'https://kunhong-lightboat.github.io/spellbee_test/test_vocabulary.pdf'; // PDF file URL
     let words = [];
+    let currentWord = '';
 
-    // Read and parse PDF
-    fileInput.addEventListener('change', async (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const fileReader = new FileReader();
-        fileReader.onload = async function () {
-          const pdfData = new Uint8Array(this.result);
-          const pdf = await pdfjsLib.getDocument(pdfData).promise;
-          let text = '';
-          
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            text += content.items.map((item) => item.str).join(' ');
-          }
-          
-          words = text.split(/\s+/).filter((word) => word.length > 0);
-          randomWordBtn.disabled = false;
-          alert('PDF loaded! Ready to choose a word.');
-        };
-        fileReader.readAsArrayBuffer(file);
+    // Load and parse the PDF
+    async function loadPdf() {
+      const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+      let text = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map((item) => item.str).join(' ');
       }
-    });
 
-    // Randomly choose and pronounce a word
-    randomWordBtn.addEventListener('click', () => {
+      words = text.split(/\s+/).filter((word) => word.length > 0);
+      chooseRandomWord(); // Choose an initial word
+      speakWordBtn.disabled = false; // Enable the speak button
+      printWordBtn.disabled = false; // Enable the print button
+    }
+
+    // Choose a new random word
+    function chooseRandomWord() {
       if (words.length === 0) return;
-      const randomWord = words[Math.floor(Math.random() * words.length)];
-      wordDisplay.textContent = `Word: ${randomWord}`;
+      currentWord = words[Math.floor(Math.random() * words.length)];
+    }
 
-      // Pronounce the word
-      const utterance = new SpeechSynthesisUtterance(randomWord);
+    // Speak the chosen word
+    function speakWord() {
+      if (!currentWord) return;
+
+      const utterance = new SpeechSynthesisUtterance(currentWord);
       speechSynthesis.speak(utterance);
+    }
+
+    // Print the chosen word and choose a new one
+    function printWord() {
+      wordDisplay.textContent = `Word: ${currentWord || 'No word chosen yet'}`;
+      chooseRandomWord(); // Choose a new word for the next interaction
+    }
+
+    // Initialize the app
+    window.addEventListener('DOMContentLoaded', () => {
+      loadPdf(); // Automatically load the PDF
+      speakWordBtn.addEventListener('click', speakWord); // Attach speak button event
+      printWordBtn.addEventListener('click', printWord); // Attach print button event
     });
   </script>
 </body>
