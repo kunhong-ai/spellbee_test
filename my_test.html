@@ -90,29 +90,37 @@
 
     }
 
-  // Fetch and display word explanation and example sentences
-  async function explainWord() {
-    if (!currentWord) return;
-  
-    const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord}`;
-  
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error('Word not found');
-      }
-      const data = await response.json();
-      const explanation = data[0].meanings[0].definitions[0].definition;
-      const example = data[0].meanings[0].definitions[0].example || 'No example available.';
-  
-      wordExplanation.innerHTML = `
-        <p>Explanation: ${explanation}</p>
-        <p>Example: ${example}</p>
-      `;
-    } catch (error) {
-      wordExplanation.textContent = `Error: ${error.message}`;
+// Fetch and display word explanation and example sentences
+async function explainWord() {
+  if (!currentWord) return;
+
+  const apiKey = '47a4f771-5c32-4afa-bf93-9adcb8921a9c'; // Replace with your actual API key
+  const apiUrl = `https://www.dictionaryapi.com/api/v3/references/learners/json/${currentWord}?key=${apiKey}`;
+
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error('Word not found');
     }
+    const data = await response.json();
+
+    if (data.length === 0 || !data[0].shortdef) {
+      throw new Error('No definition available');
+    }
+
+    const explanation = data[0].shortdef[0]; // Get the first definition
+    const example = data[0].def && data[0].def[0].sseq && data[0].def[0].sseq[0][0][1].dt
+      ? data[0].def[0].sseq[0][0][1].dt[1][1]
+      : 'No example available.';
+
+    wordExplanation.innerHTML = `
+      <p>Explanation: ${explanation}</p>
+      <p>Example: ${example}</p>
+    `;
+  } catch (error) {
+    wordExplanation.textContent = `Error: ${error.message}`;
   }
+}
 
     // Initialize the app
     window.addEventListener('DOMContentLoaded', () => {
