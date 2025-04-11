@@ -90,11 +90,81 @@
 
     }
 
-// Fetch and display word explanation and example sentences
+// Helper: Clean text by removing Merriam-Webster formatting
+function cleanText(text) {
+  if (!text) return "";
+  return text
+    .replace(/{bc}/g, "")
+    .replace(/{it}(.+?){\/it}/g, "<i>$1</i>")
+    .replace(/{sx\|(.+?)\|.*?}/g, "$1")
+    .replace(/{sc}(.+?){\/sc}/g, "<small>$1</small>");
+}
+
+// Helper: Parse Merriam-Webster API data
+function parseWordData(data) {
+  if (!data || !Array.isArray(data)) return null;
+
+  // Take the first entry for simplicity (spelling bee needs one main definition set)
+  const entry = data[0];
+  if (!entry) return null;
+
+  const {
+    meta: { id, stems, offensive },
+    hom,
+    hwi: { hw, prs = [] },
+    fl,
+    def = [],
+    shortdef = [],
+    uros = [],
+  } = entry;
+
+  // Extract pronunciations
+  const pronunciations = prs.map((pron) => ({
+    text: pron.mw,
+    audio: pron.sound?.audio
+      ? `https://media.merriam-webster.com/audio/prons/en/us/mp3/${pron.sound.audio}.mp3`
+      : null,
+  }));
+
+  // Extract definitions with senses and examples
+  const definitions = def.flatMap(({ sseq }) =>
+    sseq.flatMap((senseGroup) =>
+      senseGroup.map((senseItem) => {
+        if (senseItem[0] === "sense") {
+          const { sn, dt = [] } = senseItem[1];
+          const definitionText = dt.find(([type]) => type === "text")?.[1] || "";
+          const examples = dt
+            .filter(([type]) => type === "vis")
+            .flatMap(([_, items]) => items.map(({ t }) => cleanText(t)));
+          return { senseNumber: sn, text: cleanText(definitionText), examples };
+        }
+        return null;
+      })
+    )
+  ).filter(Boolean);
+
+  // Extract related forms
+  const relatedForms = uros.map(({ ure, fl }) => ({ form: ure, partOfSpeech: fl }));
+
+  return {
+    id,
+    word: hw,
+    partOfSpeech: fl,
+    homograph: hom,
+    stems,
+    offensive,
+    pronunciations,
+    definitions,
+    shortDefinitions: shortdef.map(cleanText),
+    relatedForms,
+  };
+}
+
+// Updated explainWord function
 async function explainWord() {
   if (!currentWord) return;
 
-  const apiKey = '47a4f771-5c32-4afa-bf93-9adcb8921a9c'; // Replace with your actual API key
+  const apiKey = '47a4f771-5c32-4afa-bf93-9adcb8921a9c'; // Your API key
   const apiUrl = `https://www.dictionaryapi.com/api/v3/references/sd3/json/${currentWord}?key=${apiKey}`;
   try {
     const response = await fetch(apiUrl);
@@ -103,23 +173,90 @@ async function explainWord() {
     }
     const data = await response.json();
 
-    if (data.length === 0 || !data[0].shortdef) {
+    if (!data || data.length === 0) {
       throw new Error('No definition available');
     }
 
-    const explanation = data[0].shortdef[0]; // Get the first definition
-    const example = data[0].def && data[0].def[0].sseq && data[0].def[0].sseq[0][0][1].dt
-      ? data[0].def[0].sseq[0][0][1].dt[1][1]
-      : 'No example available.';
+    const parsed = parseWordData(data);
+    if (!parsed) {
+      throw new Error('Unable to parse word data');
+    }
 
-    wordExplanation.innerHTML = `
-      <p>Explanation: ${explanation}</p>
-      <p>Example: ${example}</p>
+    const { word, partOfSpeech, pronunciations, shortDefinitions, definitions, relatedForms, offensive } = parsed;
+
+    // Build HTML output
+    let html = `
+      <h3>${word} (${partOfSpeech})${offensive ? " <span style='color: red; font-size: 0.9em;'>[Offensive]</span>" : ""}</h3>
     `;
+
+    // Pronunciations
+    if (pronunciations.length) {
+      html += `
+        <p><strong>Pronunciation:</strong> ${pronunciations
+          .map((pron) => `${pron.text}${pron.audio ? ` <a href="${pron.audio}" target="_blank">[Listen]</a>` : ""}`)
+          .join(", ")}</p>
+      `;
+    }
+
+    // Short definitions
+    if (shortDefinitions.length) {
+      html += `
+        <p><strong>Definitions:</strong></p>
+        <ol>
+          ${shortDefinitions.map((def) => `<li>${def}</li>`).join("")}
+        </ol>
+      `;
+    }
+
+    // Full definitions with examples
+    if (definitions.length) {
+      html += `
+        <p><strong>Detailed Definitions:</strong></p>
+        <ol>
+          ${definitions
+            .slice(0, 3) // Limit to 3 for brevity in spelling bee context
+            .map(
+              (def) => `
+                <li>
+                  ${def.senseNumber ? `<strong>${def.senseNumber}</strong> ` : ""}${def.text}
+                  ${def.examples.length ? `
+                    <ul style="margin-top: 0.5em;">
+                      ${def.examples.map((ex) => `<li>${ex}</li>`).join("")}
+                    </ul>
+                  ` : ""}
+                </li>
+              `
+            )
+            .join("")}
+        </ol>
+      `;
+    }
+
+    // Related forms
+    if (relatedForms.length) {
+      html += `
+        <p><strong>Related Forms:</strong> ${relatedForms
+          .map((form) => `${form.form} (${form.partOfSpeech})`)
+          .join(", ")}</p>
+      `;
+    }
+
+    wordExplanation.innerHTML = html;
+
+    // Add minimal inline styles (since stylesheet.css isn't shared)
+    const style = document.createElement("style");
+    style.textContent = `
+      #wordExplanation ol { margin-left: 1.5em; }
+      #wordExplanation ul { margin-left: 2em; }
+      #wordExplanation h3 { margin-top: 0.5em; }
+      #wordExplanation p { margin: 0.5em 0; }
+    `;
+    document.head.appendChild(style);
   } catch (error) {
     wordExplanation.textContent = `Error: ${error.message}`;
   }
 }
+
 
     // Initialize the app
     window.addEventListener('DOMContentLoaded', () => {
