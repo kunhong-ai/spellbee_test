@@ -95,8 +95,7 @@ async function explainWord() {
   if (!currentWord) return;
 
   const apiKey = '47a4f771-5c32-4afa-bf93-9adcb8921a9c'; // Replace with your actual API key
-  const apiUrl = `https://www.dictionaryapi.com/api/v3/references/learners/json/${currentWord}?key=${apiKey}`;
-
+  const apiUrl = `https://www.dictionaryapi.com/api/v3/references/sd3/json/${currentWord}?key=${apiKey}`;
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
