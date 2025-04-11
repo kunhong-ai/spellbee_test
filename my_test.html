@@ -9,7 +9,6 @@
   <h1>Rainbow Spell Bee Challenge</h1>
   <button id="speakWordBtn" disabled>Speak Random Word</button>
   <button id="printWordBtn" disabled>Print Spelling</button>
-  <button id="explainWordBtn" disabled>Explain Word</button>
   <p id="wordDisplay"></p>
   <p id="wordExplanation"></p>
 
@@ -17,7 +16,6 @@
   <script>
     const speakWordBtn = document.getElementById('speakWordBtn');
     const printWordBtn = document.getElementById('printWordBtn');
-    const explainWordBtn = document.getElementById('explainWordBtn');
     const wordDisplay = document.getElementById('wordDisplay');
     const wordExplanation = document.getElementById('wordExplanation');
     const pdfUrl = 'https://kunhong-ai.github.io/spellbee_test/test_vocabulary.pdf'; // PDF file URL
@@ -39,7 +37,6 @@
       chooseRandomWord(); // Choose an initial word
       speakWordBtn.disabled = false; // Enable the speak button
       printWordBtn.disabled = false; // Enable the print button
-      explainWordBtn.disabled = false; // Enable the explain button
     }
 
     // Choose a new random word
@@ -66,7 +63,7 @@
 
       // Display the word on the page
       wordDisplay.textContent = `Word: ${currentWord}`;
-
+      explainWord();
       // Speak the spelling (character by character)
       for (const char of currentWord) {
         const utterance = new SpeechSynthesisUtterance(char);
@@ -102,7 +99,6 @@
       loadPdf(); // Automatically load the PDF
       speakWordBtn.addEventListener('click', speakWord); // Attach speak button event
       printWordBtn.addEventListener('click', printWord); // Attach print button event
-      explainWordBtn.addEventListener('click', explainWord); // Attach explain button event
     });
   </script>
 </body>
