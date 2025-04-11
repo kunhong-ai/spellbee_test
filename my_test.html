@@ -7,15 +7,17 @@
 </head>
 <body>
   <h1>Rainbow Spell Bee Challenge</h1>
-  <button id="speakWordBtn" disabled>Speak Random Word</button>
-  <button id="printWordBtn" disabled>Print Spelling</button>
+  <button id="nextWordBtn" disabled>Choose Next Word</button>
+  <button id="printWordBtn" disabled>Print Spelling and Definition</button>
+  <button id="pronouceWordBtn" disabled>Pronounce</button>
   <p id="wordDisplay"></p>
   <p id="wordExplanation"></p>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
-    const speakWordBtn = document.getElementById('speakWordBtn');
+    const pronouceWordBtn = document.getElementById('pronouceWordBtn');
     const printWordBtn = document.getElementById('printWordBtn');
+    const nextWordBtn = document.getElementById('nextWordBtn');
     const wordDisplay = document.getElementById('wordDisplay');
     const wordExplanation = document.getElementById('wordExplanation');
     const pdfUrl = 'https://kunhong-ai.github.io/spellbee_test/test_vocabulary.pdf'; // PDF file URL
@@ -34,16 +36,20 @@
       }
 
       words = text.split(/\s+/).filter((word) => word.length > 0);
-      chooseRandomWord(); // Choose an initial word
-      speakWordBtn.disabled = false; // Enable the speak button
-      printWordBtn.disabled = false; // Enable the print button
+      nextWordBtn.disabled = false;
+      pronouceWordBtn.disabled = true; // Enable the speak button
+      printWordBtn.disabled = true; // Enable the print button
     }
 
     // Choose a new random word
     function chooseRandomWord() {
       if (words.length === 0) return;
       currentWord = words[Math.floor(Math.random() * words.length)];
-      return currentWord.includes('/') ? currentWord.split('/')[1] : currentWord;
+      if (currentWord.includes('/'))
+        return chooseRandomWord()
+      speakWord();
+      printWordBtn.disabled = false;
+      return currentWord;
     }
 
     // Speak the chosen word
@@ -52,9 +58,6 @@
 
       const utterance = new SpeechSynthesisUtterance(currentWord);
       speechSynthesis.speak(utterance);
-
-      // Enable the "Print Random Word" button after speaking
-      printWordBtn.disabled = false;
     }
 
     // Print the chosen word and speak its spelling
@@ -64,15 +67,19 @@
       // Display the word on the page
       wordDisplay.textContent = `Word: ${currentWord}`;
       explainWord();
+
+      // Disable the "Print Random Word" button until a new word is chosen
+      printWordBtn.disabled = true;
+      nextWordBtn.disabled = false;
+    }
+
+    function pronounceWord() {
       // Speak the spelling (character by character)
       for (const char of currentWord) {
         const utterance = new SpeechSynthesisUtterance(char);
         speechSynthesis.speak(utterance);
       }
 
-      // Disable the "Print Random Word" button until a new word is chosen
-      printWordBtn.disabled = true;
-      chooseRandomWord(); // Choose a new word for the next interaction
     }
 
     // Fetch and display word explanation
@@ -97,8 +104,9 @@
     // Initialize the app
     window.addEventListener('DOMContentLoaded', () => {
       loadPdf(); // Automatically load the PDF
-      speakWordBtn.addEventListener('click', speakWord); // Attach speak button event
+      nextWordBtn.addEventListener('click', chooseRandomWord); // Attach speak button event
       printWordBtn.addEventListener('click', printWord); // Attach print button event
+      pronouceWordBtn.addEventListener('click', pronounceWord); 
     });
   </script>
 </body>
