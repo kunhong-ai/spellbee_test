@@ -10,12 +10,14 @@
   <button id="nextWordBtn" disabled>Choose Next Word</button>
   <button id="printWordBtn" disabled>Print Spelling and Definition</button>
   <button id="pronounceWordBtn" disabled>Pronounce</button>
+  <button id="spellWordBtn" disabled>Spell</button>
   <p id="wordDisplay"></p>
   <p id="wordExplanation"></p>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
     const pronounceWordBtn = document.getElementById('pronounceWordBtn');
+    const spellWordBtn = document.getElementById('spellWordBtn');
     const printWordBtn = document.getElementById('printWordBtn');
     const nextWordBtn = document.getElementById('nextWordBtn');
     const wordDisplay = document.getElementById('wordDisplay');
@@ -39,6 +41,7 @@
       nextWordBtn.disabled = false;
       pronounceWordBtn.disabled = true; // Enable the speak button
       printWordBtn.disabled = true; // Enable the print button
+      spellWordBtn.disabled = true;
     }
 
     // Choose a new random word
@@ -72,9 +75,10 @@
       printWordBtn.disabled = true;
       nextWordBtn.disabled = false;
       pronounceWordBtn.disabled = false;
+      spellWordBtn.disabled = false;
     }
 
-    function pronounceWord() {
+    function spellWord() {
       // Speak the spelling (character by character)
       for (const char of currentWord) {
         const utterance = new SpeechSynthesisUtterance(char);
@@ -112,7 +116,8 @@
       loadPdf(); // Automatically load the PDF
       nextWordBtn.addEventListener('click', chooseRandomWord); // Attach speak button event
       printWordBtn.addEventListener('click', printWord); // Attach print button event
-      pronounceWordBtn.addEventListener('click', pronounceWord); 
+      pronounceWordBtn.addEventListener('click', speakWord); 
+      spellWordBtn.addEventListener('click', spellWord); 
     });
   </script>
 </body>
