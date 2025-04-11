@@ -9,13 +9,17 @@
   <h1>Rainbow Spell Bee Challenge</h1>
   <button id="speakWordBtn" disabled>Speak Random Word</button>
   <button id="printWordBtn" disabled>Print Spelling</button>
+  <button id="explainWordBtn" disabled>Explain Word</button>
   <p id="wordDisplay"></p>
+  <p id="wordExplanation"></p>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
     const speakWordBtn = document.getElementById('speakWordBtn');
     const printWordBtn = document.getElementById('printWordBtn');
+    const explainWordBtn = document.getElementById('explainWordBtn');
     const wordDisplay = document.getElementById('wordDisplay');
+    const wordExplanation = document.getElementById('wordExplanation');
     const pdfUrl = 'https://kunhong-ai.github.io/spellbee_test/test_vocabulary.pdf'; // PDF file URL
     let words = [];
     let currentWord = '';
@@ -35,6 +39,7 @@
       chooseRandomWord(); // Choose an initial word
       speakWordBtn.disabled = false; // Enable the speak button
       printWordBtn.disabled = false; // Enable the print button
+      explainWordBtn.disabled = false; // Enable the explain button
     }
 
     // Choose a new random word
@@ -73,13 +78,32 @@
       chooseRandomWord(); // Choose a new word for the next interaction
     }
 
+    // Fetch and display word explanation
+    async function explainWord() {
+      if (!currentWord) return;
+
+      const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error('Word not found');
+        }
+        const data = await response.json();
+        const explanation = data[0].meanings[0].definitions[0].definition;
+        wordExplanation.textContent = `Explanation: ${explanation}`;
+      } catch (error) {
+        wordExplanation.textContent = `Error: ${error.message}`;
+      }
+    }
+
     // Initialize the app
     window.addEventListener('DOMContentLoaded', () => {
       loadPdf(); // Automatically load the PDF
       speakWordBtn.addEventListener('click', speakWord); // Attach speak button event
       printWordBtn.addEventListener('click', printWord); // Attach print button event
+      explainWordBtn.addEventListener('click', explainWord); // Attach explain button event
     });
   </script>
 </body>
 </html>
-
