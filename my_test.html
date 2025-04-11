@@ -83,24 +83,29 @@
 
     }
 
-    // Fetch and display word explanation
-    async function explainWord() {
-      if (!currentWord) return;
-
-      const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord}`;
-
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error('Word not found');
-        }
-        const data = await response.json();
-        const explanation = data[0].meanings[0].definitions[0].definition;
-        wordExplanation.textContent = `Explanation: ${explanation}`;
-      } catch (error) {
-        wordExplanation.textContent = `Error: ${error.message}`;
+  // Fetch and display word explanation and example sentences
+  async function explainWord() {
+    if (!currentWord) return;
+  
+    const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord}`;
+  
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error('Word not found');
       }
+      const data = await response.json();
+      const explanation = data[0].meanings[0].definitions[0].definition;
+      const example = data[0].meanings[0].definitions[0].example || 'No example available.';
+  
+      wordExplanation.innerHTML = `
+        <p>Explanation: ${explanation}</p>
+        <p>Example: ${example}</p>
+      `;
+    } catch (error) {
+      wordExplanation.textContent = `Error: ${error.message}`;
     }
+  }
 
     // Initialize the app
     window.addEventListener('DOMContentLoaded', () => {
