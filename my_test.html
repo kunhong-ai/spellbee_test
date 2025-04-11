@@ -9,13 +9,13 @@
   <h1>Rainbow Spell Bee Challenge</h1>
   <button id="nextWordBtn" disabled>Choose Next Word</button>
   <button id="printWordBtn" disabled>Print Spelling and Definition</button>
-  <button id="pronouceWordBtn" disabled>Pronounce</button>
+  <button id="pronounceWordBtn" disabled>Pronounce</button>
   <p id="wordDisplay"></p>
   <p id="wordExplanation"></p>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
-    const pronouceWordBtn = document.getElementById('pronouceWordBtn');
+    const pronounceWordBtn = document.getElementById('pronounceWordBtn');
     const printWordBtn = document.getElementById('printWordBtn');
     const nextWordBtn = document.getElementById('nextWordBtn');
     const wordDisplay = document.getElementById('wordDisplay');
@@ -37,7 +37,7 @@
 
       words = text.split(/\s+/).filter((word) => word.length > 0);
       nextWordBtn.disabled = false;
-      pronouceWordBtn.disabled = true; // Enable the speak button
+      pronounceWordBtn.disabled = true; // Enable the speak button
       printWordBtn.disabled = true; // Enable the print button
     }
 
@@ -71,6 +71,7 @@
       // Disable the "Print Random Word" button until a new word is chosen
       printWordBtn.disabled = true;
       nextWordBtn.disabled = false;
+      pronounceWordBtn.disabled = false;
     }
 
     function pronounceWord() {
@@ -106,7 +107,7 @@
       loadPdf(); // Automatically load the PDF
       nextWordBtn.addEventListener('click', chooseRandomWord); // Attach speak button event
       printWordBtn.addEventListener('click', printWord); // Attach print button event
-      pronouceWordBtn.addEventListener('click', pronounceWord); 
+      pronounceWordBtn.addEventListener('click', pronounceWord); 
     });
   </script>
 </body>
